@@ -213,7 +213,7 @@ preprocess_rrbs_normal <- function(patient_id, sample_id, bam_file, min_tumor,
       for (a in 1:25) {
           get_allele_counts(
               i = a, patient_id = patient_id, sample_id = sample_id, sex = sex, bam_file, mq = mq,
-              path, pipeline_files, build, n_cores, test = FALSE, paired_end=paired_end, segments_bed=regions
+              path, pipeline_files, build, n_cores, test = FALSE, paired_end=paired_end, segments_bed=segments_bed
           )
       }
 
