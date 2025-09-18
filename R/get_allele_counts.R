@@ -27,7 +27,7 @@
 #' SNPs for the ith subset of RRBS loci
 #' @keywords internal
 get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
-                               path, path_to_CAMDAC, build=NULL, n_cores, test=FALSE, paired_end = TRUE){
+                               path, path_to_CAMDAC, build=NULL, n_cores, test=FALSE, paired_end = TRUE, segments_bed=NULL){
   
   if(getOption("scipen")==0){options(scipen = 999)} 
   # important to turn scientific notation off when saving genomic coordinates to .txt files
@@ -76,6 +76,27 @@ get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
   f_name = paste(segments_file_path, "segments.",build, ".",i, ".RData", sep = "")
   load(f_name)
   rm(f_name)
+
+  # If segments_bed is given, subset segments file to overlapping locations
+  if (!is.null(segments_bed)){
+    regions = read_segments_bed(segments_bed)
+    segments_subset = segments_subset[queryHits(GenomicRanges::findOverlaps(segments_subset, regions) )]
+  }
+  if(length(segments_subset) == 0){
+    # Return empty BAM if no regions to analyse in this iteration
+    df_names = c("CHR","chrom","start","end","width",
+                  "POS","ref","alt","alt_counts","ref_counts",
+                  "total_counts","BAF","total_depth",
+                  # "other_counts","all_counts",
+                  "M","UM","total_counts_m","m",
+                  # allele counts breakdown may be obtained by uncommenting this line + line 441.
+                  #"Af","Ar","Cf","Cr","Tf","Tr","Gf","Gr","CAr","TGf","CGf","CGr", 
+                  "CCGG")
+    df <- data.frame(matrix(NA, nrow=1, ncol=length(df_names)))
+    names(df) <- df_names
+    df <- df[-1,] # Return empty dataframe
+    return(df) 
+  }
   
   # Ensure that spurious alignments to Y in females are removed
   if(sex=="XX"&i==25){segments_subset<-segments_subset[!as.character(seqnames(segments_subset))%in%c("chrY","Y")]}

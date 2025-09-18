@@ -94,7 +94,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
       min_tumor = 1, min_norm = config$min_normal_cov, mq = config$min_mapq,
       sex = s$sex, path = config$outdir,
       pipeline_files = config$refs, build = config$build,
-      n_cores = config$n_cores, paired_end = is_pe(config)
+      n_cores = config$n_cores, paired_end = is_pe(config), segments_bed=config$regions
     )
   }
 
@@ -128,7 +128,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
             i = a, patient_id = patient_id, sample_id = sample_id,
             sex = sex, bam_file = bam_file, mq = mq,
             path = path, path_to_CAMDAC = pipeline_files,
-            build = build, n_cores = n_cores, test = FALSE, paired_end=paired_end
+            build = build, n_cores = n_cores, test = FALSE, paired_end=paired_end, segments_bed=config$regions
         )
     }
 
@@ -194,7 +194,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
 }
 
 preprocess_rrbs_normal <- function(patient_id, sample_id, bam_file, min_tumor,
-                              min_normal, mq, sex, path, pipeline_files, build, n_cores, paired_end) {
+                              min_normal, mq, sex, path, pipeline_files, build, n_cores, paired_end, segments_bed) {
 
     # For normals, CAMDAC-RRBS expects same ID
     normal_id = sample_id
@@ -212,7 +212,7 @@ preprocess_rrbs_normal <- function(patient_id, sample_id, bam_file, min_tumor,
       for (a in 1:25) {
           get_allele_counts(
               i = a, patient_id = patient_id, sample_id = sample_id, sex = sex, bam_file, mq = mq,
-              path, pipeline_files, build, n_cores, test = FALSE, paired_end=paired_end
+              path, pipeline_files, build, n_cores, test = FALSE, paired_end=paired_end, segments_bed=regions
           )
       }
 
