@@ -40,6 +40,11 @@ CamConfig <- function(outdir, bsseq, lib, build, n_cores = 1, regions = NULL,
   fs::dir_create(outdir)
   outdir <- fs::path_real(outdir)
 
+  # Validate inputs
+  stopifnot(cna_caller %in% c("ascat", "battenberg"), "Invalid CNA caller argument.")
+  stopifnot(lib %in% c("pe", "se"), "Invalid BSSEQ library argument.")
+  stopifnot(bsseq %in% c("wgbs", "rrbs"), "Invalid BSSEQ assay argument.")
+
   # Set camdac references if not they do not exist
   refs <- ifelse(is.null(refs), pipeline_files(), fs::path_real(refs))
 
