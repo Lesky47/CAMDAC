@@ -31,6 +31,13 @@ get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
   
   if(getOption("scipen")==0){options(scipen = 999)} 
   # important to turn scientific notation off when saving genomic coordinates to .txt files
+
+  # Return output file if it exists
+  f_nm <- file.path(path_output, paste(patient_id, ".", sample_id, ".", i, ".SNPs.CpGs.fst", sep = ""))
+  if (file.exists(f_nm)){
+    cat(paste0("Output counts file exists - Skipping: ", f_nm, "\n"))
+    return NULL
+  }
   
   # ensure mq is parsed as numerical value
   mq <- as.numeric(mq)
@@ -83,19 +90,8 @@ get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
     segments_subset = segments_subset[queryHits(GenomicRanges::findOverlaps(segments_subset, regions) )]
   }
   if(length(segments_subset) == 0){
-    # Return empty BAM if no regions to analyse in this iteration
-    df_names = c("CHR","chrom","start","end","width",
-                  "POS","ref","alt","alt_counts","ref_counts",
-                  "total_counts","BAF","total_depth",
-                  # "other_counts","all_counts",
-                  "M","UM","total_counts_m","m",
-                  # allele counts breakdown may be obtained by uncommenting this line + line 441.
-                  #"Af","Ar","Cf","Cr","Tf","Tr","Gf","Gr","CAr","TGf","CGf","CGr", 
-                  "CCGG")
-    df <- data.frame(matrix(NA, nrow=1, ncol=length(df_names)))
-    names(df) <- df_names
-    df <- df[-1,] # Return empty dataframe
-    return(df) 
+    cat("No regions found for ", i, ".")
+    return(NULL)
   }
   
   # Ensure that spurious alignments to Y in females are removed
@@ -654,7 +650,7 @@ get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
   invisible(gc())
   
   # Create file
-  f_nm <- file.path(path_output, paste(patient_id, ".", sample_id, ".", i, ".SNPs.CpGs.fst", sep = ""))
+
   fst::write_fst(df_merged,  f_nm)
   cat(paste0("Written to: ", f_nm, "\n"))
 }
