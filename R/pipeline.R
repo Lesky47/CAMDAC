@@ -113,6 +113,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
   min_normal <- config$min_normal_cov
   mq <- config$min_mapq
   paired_end <- is_pe(config)
+  segments_bed <- config$regions
 
   # Define expected ac file
   ac_file = file.path(
@@ -128,7 +129,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
             i = a, patient_id = patient_id, sample_id = sample_id,
             sex = sex, bam_file = bam_file, mq = mq,
             path = path, path_to_CAMDAC = pipeline_files,
-            build = build, n_cores = n_cores, test = FALSE, paired_end=paired_end, segments_bed=config$regions
+            build = build, n_cores = n_cores, test = FALSE, paired_end=paired_end, segments_bed=segments_bed
         )
     }
 
