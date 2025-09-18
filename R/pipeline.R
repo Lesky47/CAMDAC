@@ -109,7 +109,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
   pipeline_files <- config$refs
   build <- config$build
   n_cores <- config$n_cores
-  min_tumor <- 1
+  min_tumor <- config$min_cov
   min_normal <- config$min_normal_cov
   mq <- config$min_mapq
   paired_end <- is_pe(config)
