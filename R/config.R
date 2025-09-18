@@ -64,6 +64,10 @@ CamConfig <- function(outdir, bsseq, lib, build, n_cores = 1, regions = NULL,
       logwarn("CNA caller must be `ascat` for RRBS data. This has now been set for the analysis.")
       cna_caller <- "ascat"
     }
+    if (!is.null(regions)){
+      logwarn("Region subsetting is not yet implemented for RRBS data. Setting regions to NULL")
+      regions <- NULL
+    }
   }
 
   if (bsseq == "wgbs"){
