@@ -32,6 +32,11 @@ get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
   if(getOption("scipen")==0){options(scipen = 999)} 
   # important to turn scientific notation off when saving genomic coordinates to .txt files
 
+  # Set working directory path and create results folders
+  # Do not change this - subsequent functions will look for files in this directory
+  path_output <- file.path(path, patient_id, "Allelecounts", sample_id)
+  suppressWarnings(dir.create(path_output, recursive = TRUE))
+
   # Return output file if it exists
   f_nm <- file.path(path_output, paste(patient_id, ".", sample_id, ".", i, ".SNPs.CpGs.fst", sep = ""))
   if (file.exists(f_nm)){
@@ -43,10 +48,6 @@ get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
   mq <- as.numeric(mq)
   cat("Mapping treshold MQ ≥ ",mq," applied","\nBase quality treshold BQ ≥ 20 applied\n", sep = "")
   
-  # Set working directory path and create results folders
-  # Do not change this - subsequent functions will look for files in this directory
-  path_output <- file.path(path, patient_id, "Allelecounts", sample_id)
-  suppressWarnings(dir.create(path_output, recursive = TRUE))
 
   # Load doParrellel if running job in parrallel 
   if(n_cores > 1){
