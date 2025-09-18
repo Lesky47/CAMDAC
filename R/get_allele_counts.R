@@ -36,7 +36,7 @@ get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
   f_nm <- file.path(path_output, paste(patient_id, ".", sample_id, ".", i, ".SNPs.CpGs.fst", sep = ""))
   if (file.exists(f_nm)){
     cat(paste0("Output counts file exists - Skipping: ", f_nm, "\n"))
-    return NULL
+    return(NULL)
   }
   
   # ensure mq is parsed as numerical value
