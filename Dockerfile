@@ -36,8 +36,14 @@ RUN mkdir -p /root/.R && \
 COPY DESCRIPTION NAMESPACE* ./
 RUN R -q -e 'remotes::install_deps(".", dependencies = TRUE, upgrade = "never", lib = "/usr/local/lib/R/site-library")'
 
-# Install CAMDAC from local repository
-RUN Rscript -e 'remotes::install_local(".")'
+# Generate docs
+RUN R -q -e 'devtools::document()'
+
+# Install CAMDAC from local directories
+COPY R ./R/
+COPY vignettes ./vignettes/
+COPY man ./man/
+RUN Rscript -e 'remotes::install_local(".",  dependencies = TRUE, upgrade = "never", lib = "/usr/local/lib/R/site-library")'
 
 # Set command to be use
 CMD ["/usr/local/bin/Rscript"]

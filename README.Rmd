@@ -34,7 +34,7 @@ A CAMDAC container is available on [dockerhub](https://hub.docker.com/r/nmensah5
 ```{bash}
 docker pull nmensah5/camdac:latest
 echo "library(CAMDAC)" > commands.R
-docker run -v $(pwd):/app nmensah5/camdac:latest Rscript /app/commands.R
+docker run -v $(pwd):/app nmensah5/camdac:latest Rscript commands.R
 ```
 
 ## Installation : Github
