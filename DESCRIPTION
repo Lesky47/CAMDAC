@@ -49,7 +49,6 @@ Imports:
     doParallel,
     gtable,
     stats,
-    ASCAT (>= 2.5.2),
     optparse,
     readr,
     scales,
@@ -70,10 +69,11 @@ Imports:
     grid,
     stringr,
     png,
-    MASS
+    MASS,
+    ASCAT (>= 3.0.0)
 Depends:
     R (>= 3.6.2)
 Remotes: 
-    ASCAT=NMNS93/ascat/ASCAT/@v2.5deva,
-    Battenberg=NMNS93/battenberg@dev
+    Battenberg=NMNS93/battenberg@dev-ascat3,
+    ASCAT=Vanloo-Lab/ascat/ASCAT/@44ddd3080723a2c3640d1cfead13437a093c21d1
 VignetteBuilder: rmarkdown
