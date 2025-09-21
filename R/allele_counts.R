@@ -151,6 +151,34 @@ drop_positions_outside_segments <- function(bam_dt, segments) {
   return(bam_dt)
 }
 
+infer_ot_ob_strand_from_flag <- function(flag) {
+  # Check for OT/OB patterns using bitwise logic
+  # Bismark OT/OB flags:
+  #   OT R1: 64 (R1) + 32 (mate_rev) + 2 (proper) + 1 (paired) = 99
+  #   OT R2: 128 (R2) + 16 (self_rev) + 2 + 1 = 147
+  #   OB R1: 64 (R1) + 16 (self_rev) + 2 + 1 = 83
+  #   OB R2: 128 (R2) + 32 (mate_rev) + 2 + 1 = 163
+
+  # Bit definitions (SAM spec)
+  is_paired      <- bitwAnd(flag, 0x1) != 0     # 1
+  is_proper_pair <- bitwAnd(flag, 0x2) != 0     # 2
+  is_reverse     <- bitwAnd(flag, 0x10) != 0    # 16
+  mate_reverse   <- bitwAnd(flag, 0x20) != 0    # 32
+  is_R1          <- bitwAnd(flag, 0x40) != 0    # 64
+  is_R2          <- bitwAnd(flag, 0x80) != 0    # 128
+
+  is_OT <- (is_R1 & !is_reverse & mate_reverse & is_proper_pair & is_paired) |
+           (is_R2 & is_reverse & !mate_reverse & is_proper_pair & is_paired)
+
+  is_OB <- (is_R1 & is_reverse & !mate_reverse & is_proper_pair & is_paired) |
+           (is_R2 & !is_reverse & mate_reverse & is_proper_pair & is_paired)
+
+  return(
+    ifelse(is_OT, "+",
+           ifelse(is_OB, "-", NA_character_))
+  )
+}
+
 fix_pe_strand_with_flags <- function(bam_dt, paired_end = T) {
   # Convert "strand" column to CAMDAC-expected strand using Bismark flags for OT/OB
   #
@@ -160,10 +188,7 @@ fix_pe_strand_with_flags <- function(bam_dt, paired_end = T) {
   # Note, this is the same as viewing in IGV as "first of pair strand".
   if (paired_end) {
     setkey(bam_dt, groupid)
-    bam_dt[, strand := data.table::fcase(
-      flag %in% c(99, 147), "+",
-      flag %in% c(83, 163), "-"
-    )]
+    bam_dt[, strand := infer_ot_ob_strand_from_flag(flag)]
   }
   return(bam_dt)
 
@@ -176,15 +201,20 @@ fix_pe_overlap_at_loci <- function(bam_dt) {
   # See: https://swiftbiosci.com/wp-content/uploads/2019/02/16-0853-Tail-Trim-Final-442019.pdf
   # 210401 - I found that the R1/"first-in-pair" flags actually have better per-base quality
   #    than their R2 counterparts. As we aren't using PE overlaps, filter R2 to see if it improves score
-  drop_overlap_read_flag <- c(147, 163) #<- c(99,83)
+
+  # Set flag for R1 status
+  bam_dt[, is_r1:=(bitwAnd(flag, 0x40)!=0)]
 
   # Get data table of duplicated reads,
   dups <- bam_dt[, .N, by = .(chrom, width, start, groupid)][N > 1, .(start, groupid)]
   bam_dt <- bam_dt[
-    # Using an anti-join, remove R1 reads from loci with pe overlap
-    !bam_dt[dups, on = .(start, groupid)][flag %in% drop_overlap_read_flag],
+    # Using an anti-join, remove non-R1 reads from loci with pe overlap
+    !bam_dt[dups, on = .(start, groupid)][is_r1==FALSE],
     on = .(chrom, width, start, groupid, flag) # Note: must include flag in join
   ]
+
+  # Clean R1 flag field
+  bam_dt[, is_r1:=NULL]
 
   return(bam_dt)
 }
