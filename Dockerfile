@@ -36,12 +36,8 @@ RUN mkdir -p /root/.R && \
 COPY DESCRIPTION NAMESPACE* ./
 RUN R -q -e 'remotes::install_deps(".", dependencies = TRUE, upgrade = "never", lib = "/usr/local/lib/R/site-library")'
 
-# Now copy the rest of your project (code layer)
-# COPY . /app
-
-# Install CAMDAC References from repository [Deprecated]
-# Optionally install CAMDAC if it's not a local package (e.g., separate install)
-RUN Rscript -e 'remotes::install_github("VanLoo-lab/CAMDAC", lib="/usr/local/lib/R/site-library")'
+# Install CAMDAC from local repository
+RUN Rscript -e 'remotes::install_local(".")'
 
 # Set command to be use
 CMD ["/usr/local/bin/Rscript"]
