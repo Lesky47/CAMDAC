@@ -44,6 +44,6 @@ download_pipeline_files <- function(bsseq, directory=NULL, quiet=TRUE){
   })
   untar(tf, exdir=location)
   
-  loginfo("Pipeline files for %s downloaded to %s", bsseq, location)
+  logging::loginfo("Pipeline files for %s downloaded to %s", bsseq, location, logger="CAMDAC")
   return(location)
 }

@@ -538,7 +538,7 @@ get_snp_allele_counts <- function(pileup_summary) {
 }
 
 get_naive_snp_allele_counts <- function(pileup_summary) {
-  print("Using naive")
+  logging::logdebug("Using naive", logger="CAMDAC")
   # Set SNP, a string of ref-alt combined from loci annotation
   pileup_summary[!is.na(ref), SNP := paste0(ref, alt)]
   # Count REF alleles. Any missing loci are set to NA

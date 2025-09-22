@@ -78,7 +78,7 @@ run_ASCAT.m <- function (patient_id,sample_id,sex,
   orig_dir <- getwd()
   
   # Set reference human genome build variables
-  cat(paste("Data with build ", build, sep = " "), "\n", sep = "")
+  logging::loginfo(paste("Data with build ", build, sep = " "), logger="CAMDAC")
   if(build=="GRCH37"){build="hg19"} # set build to to assembly version disregarging UCSC/Ensembl
   if(build=="GRCH38"){build="hg38"}
   
@@ -135,7 +135,7 @@ run_ASCAT.m <- function (patient_id,sample_id,sex,
     # Overlap normal and tumour
     dt_sample_SNPs <- merge(dt_sample_SNPs, dt_normal_SNPs, by = c("chrom","POS","ref", "alt"))
     rm(dt_normal_SNPs)
-    cat("Germline SNP info loaded succesfully!\n")
+    logging::logdebug("Germline SNP info loaded succesfully!", logger="CAMDAC")
   } ; rm(cols)
   
   # Obatin SNP genotype from bulk if there is no patient-matched normal
@@ -160,14 +160,14 @@ run_ASCAT.m <- function (patient_id,sample_id,sex,
   if(sample_id == normal_id){
      dt_sample_SNPs <- dt_sample_SNPs[total_counts >= min_normal,]
      min <- min_normal
-     cat("Minimum counts treshold in the matched normal",min_normal,"count(s)\n")
+     logging::loginfo("Minimum counts treshold in the matched normal %s count(s)",min_normal, logger="CAMDAC")
   }
   
   if(sample_id != normal_id){
      dt_sample_SNPs <- dt_sample_SNPs[total_counts >= min_tumour,]
      min <- min_tumour
-     cat("Minimum counts treshold in tumour sample set to",min,
-         "count(s) \nMinimum counts treshold in the matched normal",min_normal,"count(s)\n")
+     logging::loginfo(paste0("Minimum counts treshold in tumour sample set to ",min,
+         "count(s).Minimum counts treshold in the matched normal",min_normal,"count(s)."), logger="CAMDAC")
   }
   
   # Add SNP loci ids
@@ -199,11 +199,11 @@ run_ASCAT.m <- function (patient_id,sample_id,sex,
   
   if(sample_id!=normal_id){
     # Remove low coverage singletons
-    cat("Removing low coverage singletons\n")
+    logging::logdebug("Removing low coverage singletons.", logger="CAMDAC")
     n <- nrow(dt_sample_SNPs)
     dt_sample_SNPs <- remove_low_cov_singletons(dt_sample_SNPs=dt_sample_SNPs,min=min)
-    cat(paste0("Low coverage singletons removed (", 
-        round2((1-(nrow(dt_sample_SNPs)/n))*100, digits=2),"% of SNPs).\n"))
+    logging::loginfo(paste0("Low coverage singletons removed (", 
+        round2((1-(nrow(dt_sample_SNPs)/n))*100, digits=2),"% of SNPs).\n"), logger="CAMDAC")
     rm(n)
 
     # Set reference file names for LogR bias correction
@@ -234,7 +234,7 @@ run_ASCAT.m <- function (patient_id,sample_id,sex,
     dt_sample_SNPs <- dt_sample_SNPs[dt_stats, nomatch=0]
     rm(dt_stats)
   
-    cat("LogR correction completed\n")
+    logging::loginfo("LogR correction completed.", logger="CAMDAC")
   } else {      
     # format normal seqnames in normal
     y <- substr(as.character(dt_sample_SNPs$chrom[1]),1,3)
@@ -300,7 +300,7 @@ run_ASCAT.m <- function (patient_id,sample_id,sex,
     
     ascat.m.plotRawData(ascat.bc, raw_LogR=dt_sample_SNPs$LogR_t, pch = 10, cex = 0.2, lim_logR = 2.5)
     save(ascat.bc, file = paste(patient_id, sample_id, "ascat.bc.RData", sep = "."))
-    cat("ASCAT object created\n")
+    logging::logdebug("ASCAT object created.", logger="CAMDAC")
     
     # Carry out segmentation
     gg = list(germlinegenotypes=ascat.bc$genotypes)
@@ -313,7 +313,7 @@ run_ASCAT.m <- function (patient_id,sample_id,sex,
     
     ascat.m.plotSegmentedData(ascat.frag, lim_logR = 2.5) 
     save(ascat.frag, file = paste(patient_id, sample_id, "ascat.frag.RData", sep = "."))
-    cat("\nASCAT copy number segmentation completed\n")
+    logging::loginfo("ASCAT copy number segmentation completed.", logger="CAMDAC")
     
     # Run copy number caller a first time to get the distance matrix
     ascat.output <- ASCAT::ascat.runAscat(ascat.frag, gamma = 1)
@@ -323,7 +323,7 @@ run_ASCAT.m <- function (patient_id,sample_id,sex,
     rm(ascat.frag)
     
     if(file.exists(paste(patient_id, sample_id,"ASCATprofile.png", sep = "."))){
-      cat("\nASCAT completed\n")
+      logging::loginfo("ASCAT completed.", logger="CAMDAC")
     
       # Save purity and ploidy
       f.nm <- paste(patient_id, ".", sample_id,".ACF.and.ploidy.txt", sep = "")
@@ -339,10 +339,11 @@ run_ASCAT.m <- function (patient_id,sample_id,sex,
       rm(ascat.output, num_het_SNPs, num_hom_SNPs)
       cat(readr::format_delim(dt, delim = "\t", col_names = T),  file = f)
       close(f); rm(dt,f,f.nm)
-      cat(paste("\nPloidy, Purity and summary stats saved in ",
-                path_output,patient_id,".",sample_id,".ACF.and.ploidy.txt","\n",sep = ""))
+      logging::loginfo(paste("\nPloidy, Purity and summary stats saved in ",
+                path_output,patient_id,".",sample_id,".ACF.and.ploidy.txt","\n",sep = ""), logger="CAMDAC")
       } else {
-        cat("\nASCAT could not find a solution\n")  
+        logging::logerror("ASCAT could not find a solution for this sample.")
+        stop()  
     }
     
     # convert to data.table
@@ -368,7 +369,7 @@ run_ASCAT.m <- function (patient_id,sample_id,sex,
     # run plot function
     outfile = paste(patient_id, sample_id,"SNP_data.pdf", sep = "_")
     plot_SNP_info(dt=dt,outfile=outfile,min=min)
-    cat("BAF and LogR diagnostics plots generated\n")
+    logging::logdebug("BAF and LogR diagnostics plots generated.", logger="CAMDAC")
     }
     
     if(is.null(reference_panel_coverage)&sample_id==normal_id){ 
@@ -393,7 +394,7 @@ run_ASCAT.m <- function (patient_id,sample_id,sex,
       
       # run plot function
       plot_normal_SNP_info(dt=dt,outfile=outfile,min=min)
-      cat("Normal BAF plots generated\n")
+      logging::logdebug("Normal BAF plots generated.", logger="CAMDAC")
     }
 
   setwd(orig_dir)
@@ -681,8 +682,8 @@ LogR_correction = function(dt_sample,dt_SNPs,build,chr_names,min_normal,
   corr_rep = abs(cor(fragments_replic_data[, .SD, .SDcols=2:ncol(fragments_replic_data)], 
                      dt_SNPs$LogR_t, use="complete.obs")[,1])
   maxreplic = which.max(corr_rep)+1 ;rm(corr_rep)
-  cat(paste0("Replication timimg correction based on ", colnames(fragments_replic_data)[maxreplic], 
-             " ENCODE cell line Repli-Seq data."))
+  logging::loginfo(paste0("Replication timing correction based on ", colnames(fragments_replic_data)[maxreplic], 
+             " ENCODE cell line Repli-Seq data."), logger="CAMDAC")
   
   # annotate each SNP with fragment replication timing info
   dt_SNPs$replic <- fragments_replic_data[, .SD, .SDcols=maxreplic]

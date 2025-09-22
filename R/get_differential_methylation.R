@@ -109,8 +109,8 @@ get_differential_methylation <-
                       ifelse(prob_DMP >= prob & m_diff_tn <= (-effect_size), "hypo", NA))]
 
   # checkpoint
-  print(paste("DMPs annotated given prob = ", prob, " and minimum effect-size = ", 
-              effect_size, sep=" ")) 
+  logging::loginfo(paste("DMPs annotated given prob = ", prob, " and minimum effect-size = ", 
+              effect_size, sep=" "), logger="CAMDAC") 
                           
   # save CAMDAC results per CpG
   output_file1 = file.path(path_output, "CAMDAC_results_per_CpG.RData")
@@ -118,9 +118,9 @@ get_differential_methylation <-
   save(CAMDAC_results_per_CpG, file=output_file1)
   
   # checkpoint
-  cat(paste0("CAMDAC CpG-wise results saved at:\n", output_file1,
-             "\nThis includes copy number information, pure tumour ",
-             "methylation rates and DMP calls.\n")) 
+  logging::loginfo(paste0("CAMDAC CpG-wise results saved at: ", output_file1,
+             ". This includes copy number information, pure tumour ",
+             "methylation rates and DMP calls."), logger="CAMDAC") 
   rm(output_file1)
 
   # extract DMPs
@@ -135,7 +135,7 @@ get_differential_methylation <-
   write.table(CAMDAC_DMPs, file=output_file2, sep='\t', col.names = TRUE, quote=FALSE)
   
   # checkpoint
-  cat(paste0("CAMDAC DMPs saved in BED5 format at ", output_file2, "\n")) 
+  logging::loginfo(paste0("CAMDAC DMPs saved in BED5 format at ", output_file2, "\n"), logger="CAMDAC") 
   rm(CAMDAC_DMPs, output_file2)  
 
   # Extract DMPs and obtain summary stats
@@ -161,7 +161,7 @@ get_differential_methylation <-
   write.table(tmp , file=output_file3, sep='\t', col.names = FALSE, quote=FALSE)
 
   # checkpoint
-  cat(paste0("\nDMP summary stats saved in ",output_file3,"\n"))
+  logging::loginfo(paste0("\nDMP summary stats saved in ",output_file3,"\n"), logger="CAMDAC")
   rm(nam, nams, vec, tmp, output_file3)
  
   # load annotations
@@ -208,7 +208,7 @@ get_differential_methylation <-
       rm(dt, f_nm)
 
       # checkpoint
-      cat(paste0(prefix, " DMRs identified and saved at ", output_file4, "\n")) 
+      logging::loginfo(paste0(prefix, " DMRs identified and saved at ", output_file4, "\n"), logger="CAMDAC") 
       rm(output_file4)
 
       # set filenames and filepaths
@@ -344,7 +344,7 @@ bin_CpGs <- function (path, patient_id, sample_id, dt, anno_list, n_cores) {
   ids <- unique(ov$cluster_id)
   l = length(ids)
  
-  cat("Concatenate annotated bins\n")
+  logging::logdebug("Concatenate annotated bins", logger="CAMDAC")
   # concatenate annotated CpG methylation
   dt_anno_bins <- rbindlist(parallel::mclapply(1:l, function(i, df, ids){
       x <- df[cluster_id==ids[i], ]
@@ -415,8 +415,8 @@ get_DMRs <- function (path, patient_id, sample_id, dt, anno_list,
                  start,end),]
    
   # print analysis parameters
-  cat(paste0("DMR threholds","\n", "min DMP counts : ", min_DMP_counts ,"\n", 
-             "min number of consecutive DMPs : ", min_consec_DMP, "\n"))  
+  logging::loginfo(paste0("DMR thresholds.", "min DMP counts : ", min_DMP_counts ,". ", 
+             "min number of consecutive DMPs : ", min_consec_DMP, "."), logger="CAMDAC")  
   
   # annotations to be assigned
   anno_names <- c("all_CpGs", "intergenic", "intragenic", "CGI", "shore", "shelf", 
@@ -495,13 +495,13 @@ get_DMRs <- function (path, patient_id, sample_id, dt, anno_list,
 
   # Report and return if no DMRs found
   if (length(ids) == 0){
-    cat("No DMRs found with the current parameters.\n")
+    logging::loginfo("No DMRs found with the current parameters.", logger="CAMDAC")
     return(NULL)
   } else {
-    cat(paste0("Number of DMRs found: ", length(ids), "\n"))
+    logging::loginfo(paste0("Number of DMRs found: ", length(ids), "\n"), logger="CAMDAC")
   }
  
-  cat("Concatenate DMR calls \n")
+  logging::logdebug("Concatenate DMR calls.", logger="CAMDAC")
   # concatenate annotated CpG methylation
   if(bulk==FALSE){
     dt_DMRs <- rbindlist(parallel::mclapply(1:l, function(i, df, ids){

@@ -297,9 +297,9 @@ battenberg_wgbs_wrapper <- function(tumourname,
   #foreach::foreach(i = 1:length(chrom_names), .errorhandling = "remove") %do% {
   for(i in 1:length(chrom_names)) {
     chrom <- chrom_names[i]
-    logdebug(paste0("Haplotyping chromosome ", chrom))
+    logging::loginfo(paste0("Battenberg haplotyping chromosome ", chrom, "."), logger="CAMDAC")
 
-    suppressMessages(
+    invisible(capture.output({
       Battenberg::run_haplotyping(
         chrom = chrom,
         tumourname = tumourname[sampleidx],
@@ -322,10 +322,11 @@ battenberg_wgbs_wrapper <- function(tumourname,
         beagleoverlap = beagleoverlap,
         externalhaplotypeprefix = externalhaplotypeprefix,
         use_previous_imputation = (sampleidx > 1)
-      )
+      )}
     )
+  )
 
-    loginfo(paste0("Battenberg RUN HAPLO COMPLETE for ", chrom))
+    logging::logdebug(paste0("Battenberg RUN HAPLO COMPLETE for ", chrom), logger="CAMDAC")
   }
   # doParallel::stopImplicitCluster()
 
@@ -341,7 +342,7 @@ battenberg_wgbs_wrapper <- function(tumourname,
   tryCatch(
     nrow(fread(paste(tumourname[sampleidx], "_heterozygousMutBAFs_haplotyped.txt", sep = ""))),
     error = function(e) {
-      print("Error: Battenberg haplotyping did not yield Tumor BAF results. Quitting.")
+      logging::logerror("Error: Battenberg haplotyping did not yield Tumor BAF results. Quitting.", logger="CAMDAC.wgbs")
       stop(e)
     }
   )

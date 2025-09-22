@@ -167,7 +167,7 @@ annotate_gc <- function(tsample, gc_refs, min_window = 100, max_window = 10000, 
   data.table::setkey(dt, seqnames, start, end)
 
   # Get GC-LogR correlations for all window sizes below maximum
-  logging::loginfo("Running GC correlation check")
+  logging::loginfo("Running GC correlation check", logger="CAMDAC")
   doParallel::registerDoParallel(cores = n_cores)
   gc_correlations <- foreach::foreach(gc_file = gc_refs) %dopar% {
     # Get window size from filename
@@ -195,7 +195,7 @@ annotate_gc <- function(tsample, gc_refs, min_window = 100, max_window = 10000, 
   best_corr_index <- which.max(gcc_vec)
   best_corr <- gc_correlations[[best_corr_index]]
 
-  logging::loginfo("GC correlation check complete")
+  logging::loginfo("GC correlation check complete", logger="CAMDAC")
   return(cbind(tsample, data.table(GC = best_corr$GC, GC_window = best_corr$window, GC_corr = best_corr$gc_corr)))
 }
 
@@ -233,7 +233,7 @@ annotate_repli <- function(tsample, repli_file) {
   cell_line_cols <- !grepl("chrom|start|end|LogR", names(nearest_repli))
   correl <- apply(nearest_repli[, ..cell_line_cols], MARGIN = 2, FUN = function(x) abs(cor(x, nearest_repli$LogR)))
   best_line <- names(which.max(correl))
-  print(best_line)
+  logging::loginfo("Replication timing correction: %s", best_line, logger="CAMDAC")
 
   # Combine with original dataframe and return
   result <- cbind(tsample, data.table(repli = nearest_repli[[best_line]]))
@@ -623,21 +623,21 @@ bind_snps_protocol <- function(tsnps, normal, config) {
   # 4) No normal mode: Use tumor only for all selections
   if (is.null(normal)) {
     # No normal mode
-    loginfo("No germline normal. Tumor-only SNP profile")
+    logging::loginfo("No germline normal. Tumor-only SNP profile", logger="CAMDAC")
     # TODO: Refactor. Currently filters SNPs on tumor set, or not at all
     tsnps <- annotate_normal_tumor_only(tsnps, nsnps = NULL)
     return(tsnps)
   }
 
   # Load normal SNPs
-  loginfo("Generating SNP profiles for tumor-normal")
+  logging::loginfo("Generating SNP profiles for tumor-normal", logger="CAMDAC")
   nsnps_f <- get_fpath(normal, config, "snps")
   nsnps <- fread_chrom(nsnps_f)
 
   default_mode <- all(c("chrom", "POS", "ref", "alt", "BAF", "BAFr") %in% names(nsnps))
 
   if (!default_mode) {
-    loginfo("Normal SNP profile is external. Applying to tumor only mode")
+    logging::loginfo("Normal SNP profile is external. Applying to tumor only mode", logger="CAMDAC")
     tsnps <- annotate_normal_tumor_only(tsnps, nsnps = nsnps)
   } else {
     tsnps <- annotate_normal(tsnps, nsnps, min_cov = config$min_cov)

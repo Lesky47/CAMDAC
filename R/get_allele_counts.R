@@ -40,13 +40,13 @@ get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
   # Return output file if it exists
   f_nm <- file.path(path_output, paste(patient_id, ".", sample_id, ".", i, ".SNPs.CpGs.fst", sep = ""))
   if (file.exists(f_nm)){
-    cat(paste0("Output counts file exists - Skipping: ", f_nm, "\n"))
+    logging::loginfo(paste0("Output counts file exists - Skipping: ", f_nm, "\n"), logger="CAMDAC")
     return(NULL)
   }
   
   # ensure mq is parsed as numerical value
   mq <- as.numeric(mq)
-  cat("Mapping treshold MQ ≥ ",mq," applied","\nBase quality treshold BQ ≥ 20 applied\n", sep = "")
+  logging::loginfo(paste0("Mapping treshold MQ ≥ ",mq," applied.","Base quality treshold BQ ≥ 20 applied"), logger="CAMDAC")
   
 
   # Load doParrellel if running job in parrallel 
@@ -68,7 +68,7 @@ get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
     build <- ifelse(unname(tmp)=="155270560", "hg19", "hg38")
     UCSC <- ifelse(substr(names(tmp), 1, 1)=="c", TRUE, FALSE)
   }
-  cat(paste("ScanBam pileup with build ", build, sep = " "), "\n", sep = "")
+  logging::loginfo(paste0("ScanBam pileup with build ", build, sep = " "), logger="CAMDAC")
   
   # Set build variables
   if(build%in%c("hg19","hg38")){UCSC=TRUE}
@@ -91,7 +91,7 @@ get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
     segments_subset = segments_subset[queryHits(GenomicRanges::findOverlaps(segments_subset, regions) )]
   }
   if(length(segments_subset) == 0){
-    cat("No regions found for ", i, ".")
+    logging::loginfo(paste0("No regions found for ", i, "."), logger="CAMDAC")
     return(NULL)
   }
   
@@ -615,7 +615,6 @@ get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
  
   # get_reads in parrallel
   if(n_cores>1){
-    print(n_cores)
     
     # Set the cluster
     cl <- makeCluster(n_cores)
@@ -653,7 +652,7 @@ get_allele_counts <- function (i , patient_id, sample_id, sex, bam_file, mq=0,
   # Create file
 
   fst::write_fst(df_merged,  f_nm)
-  cat(paste0("Written to: ", f_nm, "\n"))
+  logging::loginfo(paste0("Written to: ", f_nm), logger="CAMDAC")
 }
 
 # END

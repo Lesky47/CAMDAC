@@ -25,7 +25,7 @@ pipeline <- function(tumor, germline, infiltrates, origin, config) {
 #' @keywords internal
 pipeline_wgbs <- function(tumor, germline = NULL, infiltrates = NULL, origin = NULL, config) {
   # Log
-  loginfo("CAMDAC:::pipeline start for %s", tumor$patient_id)
+  logging::loginfo("Pipeline start for %s", tumor$patient_id, logger="CAMDAC")
 
   # Preprocess CpG, SNP and methylation data for all samples
   preprocess_wgbs(
@@ -45,7 +45,7 @@ pipeline_wgbs <- function(tumor, germline = NULL, infiltrates = NULL, origin = N
   cmain_call_dmrs(tumor, config)
 
   # Log
-  loginfo("CAMDAC WGBS pipeline complete for %s", tumor$patient_id)
+  logging::loginfo("CAMDAC WGBS pipeline complete for %s", tumor$patient_id, logger="CAMDAC")
 }
 
 #' Preprocess a list of CamSample objects for analysis
@@ -89,6 +89,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
         next
     }
 
+    logging::loginfo("Preprocessing sample %s:%s", s$patient_id, s$id, logger="CAMDAC.rrbs")
     preprocess_rrbs_normal(
       patient_id = s$patient_id , sample_id = s$id, bam_file = s$bam,
       min_tumor = 1, min_normal = config$min_normal_cov, mq = config$min_mapq,
@@ -122,7 +123,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
   )
 
   if (!file.exists(ac_file)) {
-    loginfo("CAMDAC:::preprocess_rrbs_tumor: %s:%s", patient_id, sample_id)
+    logging::loginfo("Preprocess tumour data: %s:%s", patient_id, sample_id, logger="CAMDAC.rrbs")
     # Run allele counter for tumor sample
     for (a in 1:25) {
         get_allele_counts(
@@ -139,7 +140,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
     )
 
   } else {
-    loginfo("CAMDAC:::preprocess_rrbs_tumor: %s already exists, skipping counts.", ac_file)
+    logging::loginfo("Preprocess RRBS tumour: %s.", ac_file, logger="CAMDAC.rrbs")
   }
 
   # Create SNP files and run ASCAT (tumor)
@@ -148,7 +149,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
         paste0(patient_id, ".", sample_id, ".ascat.output.RData")
     )
   if (!file.exists(cna_file)){
-    loginfo("CAMDAC:::ASCAT.m Tumor")
+    logging::loginfo("ASCAT.m Tumor", logger="CAMDAC.rrbs")
     run_ASCAT.m(
         patient_id, sample_id, sex,
         patient_matched_normal_id = germline$id,
@@ -157,11 +158,11 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
         n_cores, reference_panel_coverage = NULL
     )
   } else {
-      loginfo("CAMDAC:::pipeline:rrbs: %s already exists, skipping CNA", cna_file)
+      logging::loginfo("CNA file already exists: %s", cna_file, logger="CAMDAC.rrbs")
   }
 
   # Process methylation info for copy number profiling and plot summary.
-  loginfo("CAMDAC:::run_methylation_data_processing Tumor")
+  logging::loginfo("Running DNA methylation processing for Tumour", logger="CAMDAC.rrbs")
   run_methylation_data_processing(
       patient_id, sample_id,
       normal_infiltrates_proxy_id = infiltrates$id,
@@ -172,7 +173,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
   )
 
   # Get purified methylation rate
-  loginfo("CAMDAC:::get_pure_tumour_methylation Tumor")
+  logging::loginfo("Calculating pure tumour DNA methylation", logger="CAMDAC.rrbs")
   get_pure_tumour_methylation(
       patient_id = patient_id, sample_id = sample_id, sex = sex,
       normal_infiltrates_proxy_id = infiltrates$id,
@@ -181,7 +182,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
   )
 
   # Get DMP and DMR calls
-  loginfo("CAMDAC:::get_differential_methylation Tumor")
+  logging::loginfo("Get tumour differential methylation.", logger="CAMDAC.rrbs")
   get_differential_methylation(
       patient_id = patient_id, sample_id = sample_id, sex = sex,
       normal_origin_proxy_id = origin$id,
@@ -191,7 +192,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
       n_cores, reseg = FALSE, bulk = FALSE
   )
 
-  loginfo("CAMDAC RRBS pipeline complete for %s", tumor$patient_id)
+  logging::loginfo("Pipeline complete for %s", tumor$patient_id, logger="CAMDAC.rrbs")
 }
 
 preprocess_rrbs_normal <- function(patient_id, sample_id, bam_file, min_tumor,

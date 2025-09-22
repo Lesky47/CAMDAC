@@ -91,7 +91,7 @@ format_output <- function(patient_id, sample_id, sex,
     path_to_CAMDAC = path_to_CAMDAC,
     outfile = outfile_prefix
   )
-  cat("Msp1 fragments information obtained for patient\n")
+  logging::loginfo("Msp1 fragments information obtained for patient\n", logger="CAMDAC")
   rm(outfile_prefix)
 }
 

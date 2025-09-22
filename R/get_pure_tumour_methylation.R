@@ -129,20 +129,20 @@ get_pure_tumour_methylation <- function(patient_id,sample_id,sex,
   rm(seg, dt_mb_mn)
 
   # Checkpoint
-  print(paste("Copy number estimates added for each CpG locus", sep=" "))
+  logging::logdebug(paste("Copy number estimates added for each CpG locus", sep=" "), logger='CAMDAC')
   
   # Annotate allele-specific copy number
   #dt_mb_mn_cn[, multi := paste(nA, nB, sep="+")]
   
   # Tumour purity estimate for each sample
-  print(paste0("Sample purity is estimated at rho = ", p,
-               ". Copy number segments assigned to CpG loci."))
+  logging::loginfo(paste0("Sample purity is estimated at rho = ", p,
+               ". Copy number segments assigned to CpG loci."), logger="CAMDAC")
   
   # Compute purified tumour methylation rates
   dt_mt <- compute_tumour_methylome(dt = dt_mb_mn_cn, 
                                     p = p, min_cov_t = 3,
                                     sex=sex, build=build)
-  print("Purified tumour methylation rate estimates added for each CpG locus")
+  logging::logdebug("Purified tumour methylation rate estimates added for each CpG locus", logger="CAMDAC")
   rm(dt_mb_mn_cn)
 
   # Set vars for m_t HDI calculation 
@@ -170,7 +170,7 @@ get_pure_tumour_methylation <- function(patient_id,sample_id,sex,
   rm(M_b, UM_b, M_n, UM_n, HDI, CN, CN_n, n)
   
   # Checkpoint
-  print("Purified tumour methylation rate HDI added for each CpG locus")
+  logging::logdebug("Purified tumour methylation rate HDI added for each CpG locus", logger="CAMDAC")
 
   # Save CAMDAC outputs so far
   dt_purified_tumour <- dt_mt ; rm(dt_mt)
@@ -187,7 +187,7 @@ get_pure_tumour_methylation <- function(patient_id,sample_id,sex,
   write.table(tmp, file=output_file, sep='\t', col.names = TRUE, quote=FALSE)
 
   # checkpoint
-  print(paste0("CAMDAC pure tumour methylation rates saved in BED4 format at ", output_file)) 
+  logging::loginfo(paste0("CAMDAC pure tumour methylation rates saved in BED4 format at ", output_file), logger="CAMDAC") 
   rm(tmp, cols1, cols2, output_file)  
 
   # compare bulk, tumour and normal methylomes

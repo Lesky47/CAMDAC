@@ -198,7 +198,7 @@ if(!sample_id%in%normal_ids){
           HDIofICDF(ICDFname=qbeta, credMass=.99, shape1=M[i]+1, shape2=UM[i]+1),
                                         mc.cores=n_cores, M=M, UM=UM))
       # Checkpoint
-      cat("Reference profile methylation rates 99% highest density intervals annotated\n")
+      logging::logdebug("Reference profile methylation rates 99% highest density intervals annotated.", logger="CAMDAC")
 
       # Add HDI to data.table
       dt_normal_m[, as.character(c("m_n_low", "m_n_high")) := as.list(vec)]
@@ -339,7 +339,7 @@ format_methylation_df <- function (dt,sample_id,normal_ids,path_output,n_cores,s
 
   if(sample_id%in%normal_ids){
     # Checkpoint
-    cat("Normal methylation rates 99% highest density intervals annotated\n")
+    logging::logdebug("Normal methylation rates 99% highest density intervals annotated.", logger="CAMDAC")
 
     # if required remove trim high coverage sites (probs = poor alignment)
     if(trim == TRUE){
@@ -355,7 +355,7 @@ format_methylation_df <- function (dt,sample_id,normal_ids,path_output,n_cores,s
   
   if(!sample_id%in%normal_ids){
     # Checkpoint
-    cat("Bulk methylation rates 99% highest density intervals annotated\n")
+    logging::logdebug("Bulk methylation rates 99% highest density intervals annotated.", logger="CAMDAC")
 
     ## save dt
     #dt_tumour_m <- dt
