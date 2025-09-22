@@ -25,7 +25,7 @@ Docker, Singularity or Apptainer:
 ``` bash
 docker pull nmensah5/camdac:latest
 echo "library(CAMDAC)" > commands.R
-docker run -v $(pwd):/app nmensah5/camdac:latest Rscript /app/commands.R
+docker run -v $(pwd):/app nmensah5/camdac:latest Rscript commands.R
 ```
 
 ## Installation : Github
@@ -62,17 +62,20 @@ pipeline with test data:
 ``` r
 library(CAMDAC)
 
-tumor_bam <- system.file("testdata", "tumor.bam", package = "CAMDAC")
-normal_bam <- system.file("testdata", "normal.bam", package = "CAMDAC")
+tumor_bam <- system.file("testdata", "tumour_beds_min.sorted.bam", package = "CAMDAC")
+normal_bam <- system.file("testdata", "normal_beds_min.sorted.bam", package = "CAMDAC")
 
 # Select samples for basic tumor-normal analysis
-tumor <- CamSample(id = "T", sex = "XY", bam = tumor_bam)
-normal <- CamSample(id = "N", sex = "XY", bam = normal_bam)
+tumor <- CamSample(id = "T", sex = "XY", bam = tumor_bam, patient_id="readme")
+normal <- CamSample(id = "N", sex = "XY", bam = normal_bam, patient_id="readme")
 
 # Configure pipeline
 config <- CamConfig(
-  outdir = "./results", bsseq = "rrbs", lib = "pe",
-  build = "hg38", refs = "./refs", n_cores = 1, cna_caller='ascat'
+  outdir = "./validation/results/test_readme/", bsseq = "rrbs", lib = "pe",
+  build = "hg38", refs = "./refs", n_cores = 1, cna_caller='ascat',
+  min_cov=1, # Minimum tumour coverage at 1 for testing.
+  min_normal_cov=1, # Minimum normal coverage at 1 for testing. 
+  min_mapq=1 # Minimum MAPQ at 1 for testing.
 )
 
 # Run CAMDAC
