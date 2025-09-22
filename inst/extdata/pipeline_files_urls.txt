@@ -1,3 +1,2 @@
 rrbs https://zenodo.org/records/10565423/files/camdac_rrbs_pipeline_files.tar.gz
 wgbs https://zenodo.org/records/10565423/files/camdac_wgbs_pipeline_files.tar.gz
-test https://www.dropbox.com/s/8zojz2mwnuuiyh6/test_wgbs_pipeline_files.tar.gz?dl=0
