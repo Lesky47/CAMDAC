@@ -342,7 +342,7 @@ battenberg_wgbs_wrapper <- function(tumourname,
   tryCatch(
     nrow(fread(paste(tumourname[sampleidx], "_heterozygousMutBAFs_haplotyped.txt", sep = ""))),
     error = function(e) {
-      logging::logerror("Error: Battenberg haplotyping did not yield Tumor BAF results. Quitting.", logger="CAMDAC.wgbs")
+      logging::logerror("Error: Battenberg haplotyping did not yield Tumor BAF results. Quitting.", logger="CAMDAC")
       stop(e)
     }
   )

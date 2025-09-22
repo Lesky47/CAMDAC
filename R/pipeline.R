@@ -8,8 +8,10 @@
 #' @export
 pipeline <- function(tumor, germline, infiltrates, origin, config) {
   if (config$bsseq == "wgbs"){
+    logging::loginfo("WGBS analysis pipline selected.", logger="CAMDAC")
     pipeline_wgbs(tumor, germline, infiltrates, origin, config)
   } else if (config$bsseq == "rrbs") {
+    logging::loginfo("RRBS analysis pipline selected.", logger="CAMDAC")
     pipeline_rrbs(tumor, germline, infiltrates, origin, config)
   } else {
     stop("Unsupported bsseq type. Please use 'wgbs' or 'rrbs'.")
@@ -89,7 +91,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
         next
     }
 
-    logging::loginfo("Preprocessing sample %s:%s", s$patient_id, s$id, logger="CAMDAC.rrbs")
+    logging::loginfo("Preprocessing sample %s:%s", s$patient_id, s$id, logger="CAMDAC")
     preprocess_rrbs_normal(
       patient_id = s$patient_id , sample_id = s$id, bam_file = s$bam,
       min_tumor = 1, min_normal = config$min_normal_cov, mq = config$min_mapq,
@@ -123,7 +125,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
   )
 
   if (!file.exists(ac_file)) {
-    logging::loginfo("Preprocess tumour data: %s:%s", patient_id, sample_id, logger="CAMDAC.rrbs")
+    logging::loginfo("Preprocess tumour data: %s:%s", patient_id, sample_id, logger="CAMDAC")
     # Run allele counter for tumor sample
     for (a in 1:25) {
         get_allele_counts(
@@ -140,7 +142,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
     )
 
   } else {
-    logging::loginfo("Preprocess RRBS tumour: %s.", ac_file, logger="CAMDAC.rrbs")
+    logging::loginfo("Preprocess RRBS tumour: %s.", ac_file, logger="CAMDAC")
   }
 
   # Create SNP files and run ASCAT (tumor)
@@ -149,7 +151,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
         paste0(patient_id, ".", sample_id, ".ascat.output.RData")
     )
   if (!file.exists(cna_file)){
-    logging::loginfo("ASCAT.m Tumor", logger="CAMDAC.rrbs")
+    logging::loginfo("ASCAT.m Tumor", logger="CAMDAC")
     run_ASCAT.m(
         patient_id, sample_id, sex,
         patient_matched_normal_id = germline$id,
@@ -158,11 +160,11 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
         n_cores, reference_panel_coverage = NULL
     )
   } else {
-      logging::loginfo("CNA file already exists: %s", cna_file, logger="CAMDAC.rrbs")
+      logging::loginfo("CNA file already exists: %s", cna_file, logger="CAMDAC")
   }
 
   # Process methylation info for copy number profiling and plot summary.
-  logging::loginfo("Running DNA methylation processing for Tumour", logger="CAMDAC.rrbs")
+  logging::loginfo("Running DNA methylation processing for Tumour", logger="CAMDAC")
   run_methylation_data_processing(
       patient_id, sample_id,
       normal_infiltrates_proxy_id = infiltrates$id,
@@ -173,7 +175,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
   )
 
   # Get purified methylation rate
-  logging::loginfo("Calculating pure tumour DNA methylation", logger="CAMDAC.rrbs")
+  logging::loginfo("Calculating pure tumour DNA methylation", logger="CAMDAC")
   get_pure_tumour_methylation(
       patient_id = patient_id, sample_id = sample_id, sex = sex,
       normal_infiltrates_proxy_id = infiltrates$id,
@@ -182,7 +184,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
   )
 
   # Get DMP and DMR calls
-  logging::loginfo("Get tumour differential methylation.", logger="CAMDAC.rrbs")
+  logging::loginfo("Get tumour differential methylation.", logger="CAMDAC")
   get_differential_methylation(
       patient_id = patient_id, sample_id = sample_id, sex = sex,
       normal_origin_proxy_id = origin$id,
@@ -192,7 +194,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
       n_cores, reseg = FALSE, bulk = FALSE
   )
 
-  logging::loginfo("Pipeline complete for %s", tumor$patient_id, logger="CAMDAC.rrbs")
+  logging::loginfo("Pipeline complete for %s", tumor$patient_id, logger="CAMDAC")
 }
 
 preprocess_rrbs_normal <- function(patient_id, sample_id, bam_file, min_tumor,

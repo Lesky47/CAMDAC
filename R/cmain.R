@@ -7,20 +7,20 @@ cmain_count_alleles <- function(sample, config) {
 
   # Skip if no BAM file provided
   if (is.null(sample$bam)) {
-    logging::logdebug("No BAM. Skipping allele counting for %s", paste0(sample$patient_id, ":", sample$id), logger="CAMDAC.wgbs")
+    logging::logdebug("No BAM. Skipping allele counting for %s", paste0(sample$patient_id, ":", sample$id), logger="CAMDAC")
     return(NULL)
   }
 
   # Error if BAM file does not exist
   if (!file.exists(sample$bam)){
-    logging::logerror("BAM file does not exist for: %s:%s", sample$patient_id, sample$id, logger="CAMDAC.wgbs")
+    logging::logerror("BAM file does not exist for: %s:%s", sample$patient_id, sample$id, logger="CAMDAC")
     stop()
   }
 
   #  Check if outputs exist and skip if required
   output_filename <- get_fpath(sample, config, "counts")
   if (file.exists(output_filename) && !config$overwrite) {
-    logging::logdebug("Skipping allele counting for %s", paste0(sample$patient_id, ":", sample$id), logger="CAMDAC.wgbs")
+    logging::logdebug("Skipping allele counting for %s", paste0(sample$patient_id, ":", sample$id), logger="CAMDAC")
     return(output_filename)
   }
 
@@ -54,7 +54,7 @@ cmain_count_alleles <- function(sample, config) {
   # Initialise parallel workers.
   doParallel::registerDoParallel(cores = config$n_cores)
 
-  logging::loginfo("Counting alleles for %s", paste0(sample$patient_id, ":", sample$id), logger="CAMDAC.wgbs")
+  logging::loginfo("Counting alleles for %s", paste0(sample$patient_id, ":", sample$id), logger="CAMDAC")
   # For each segment, load the appropriate SNP/CpG loci file segment and call allele counter in parallel
   #   Set warn=2 to ensure foreach fails if any of the parallel workers are terminated or raise a warning.
   #   without this option, foreach simply returns a warning and the pipeline continues. Essential for memory warning terminations.
@@ -97,18 +97,18 @@ cmain_make_snps <- function(sample, config) {
   # Skip if counts file does not exist
   output_file <- CAMDAC::get_fpath(sample, config, "snps")
   if (fs::file_exists(output_file) & !config$overwrite) {
-    logging::logdebug("Skipping SNP profile creation for %s", paste0(sample$id), logger="CAMDAC.wgbs")
+    logging::logdebug("Skipping SNP profile creation for %s", paste0(sample$id), logger="CAMDAC")
     return(output_file)
   }
 
   ac_file <- get_fpath(sample, config, "counts")
   if (!fs::file_exists(ac_file)) {
-    logging::logdebug("No counts file. Skipping SNP profile creation for %s", paste0(sample$id), logger="CAMDAC.wgbs")
+    logging::logdebug("No counts file. Skipping SNP profile creation for %s", paste0(sample$id), logger="CAMDAC")
     return(NULL)
   }
 
 
-  logging::loginfo("Making SNP profile for %s", paste0(sample$id), logger="CAMDAC.wgbs")
+  logging::loginfo("Making SNP profile for %s", paste0(sample$id), logger="CAMDAC")
 
   # Load required reference files
   gc_refs <- get_reference_files(config, "gc_per_window")
@@ -142,7 +142,7 @@ cmain_make_snps <- function(sample, config) {
 cmain_bind_snps <- function(tumour, normal, config) {
   tsnps_output_file <- CAMDAC::get_fpath(tumour, config, "tsnps")
   if (fs::file_exists(tsnps_output_file) & !config$overwrite) {
-    logging::logdebug("Skipping SNP profile creation for %s", paste0(tumour$id, "&", normal$id), logger="CAMDAC.wgbs")
+    logging::logdebug("Skipping SNP profile creation for %s", paste0(tumour$id, "&", normal$id), logger="CAMDAC")
     return(tsnps_output_file)
   }
 
@@ -153,7 +153,7 @@ cmain_bind_snps <- function(tumour, normal, config) {
   # Check previous pipeline step was run
   tsnps_f <- get_fpath(tumour, config, "snps")
   if (!fs::file_exists(tsnps_f)) {
-    logging::logwarn("Tumour SNP profiles must be created before binding for CNA calling. CAMDAC may not run correctly.", logger="CAMDAC.wgbs")
+    logging::logwarn("Tumour SNP profiles must be created before binding for CNA calling. CAMDAC may not run correctly.", logger="CAMDAC")
     return()
   }
   tsnps <- fread_chrom(tsnps_f)
@@ -209,14 +209,14 @@ cmain_call_cna <- function(tumour, config) {
   # Skip if file exists and overwrite is false
   cna_output_name <- get_fpath(tumour, config, "cna")
   if (fs::file_exists(cna_output_name) & !config$overwrite) {
-    logging::logdebug("CNA Found. Skipping %s analysis for %s", config$cna_caller, tumour$id, logger="CAMDAC.wgbs")
+    logging::logdebug("CNA Found. Skipping %s analysis for %s", config$cna_caller, tumour$id, logger="CAMDAC")
     return(cna_output_name)
   }
 
   # Skip if tsnps file does not exist
   tsnps_f <- get_fpath(tumour, config, "tsnps")
   if (!fs::file_exists(tsnps_f)) {
-    logging::logwarn("No tsnps file. Skipping %s analysis for %s:%s", config$cna_caller, tumour$patient_id, tumour$id, logger="CAMDAC.wgbs")
+    logging::logwarn("No tsnps file. Skipping %s analysis for %s:%s", config$cna_caller, tumour$patient_id, tumour$id, logger="CAMDAC")
     return(NULL)
   }
 
@@ -225,7 +225,7 @@ cmain_call_cna <- function(tumour, config) {
   } else if (config$cna_caller == "battenberg") {
     cna <- cmain_run_battenberg(tumour, config)
   } else {
-    logging::logerror("Unknown CNA caller option in config", logger="CAMDAC.wgbs")
+    logging::logerror("Unknown CNA caller option in config", logger="CAMDAC")
     stop()
   }
 
@@ -242,7 +242,7 @@ cmain_call_cna <- function(tumour, config) {
 #' @param config A camdac config object
 #' @export
 cmain_run_ascat <- function(tumour, config) {
-  logging::loginfo("Running ASCAT analysis for %s", paste0(tumour$id), logger="CAMDAC.wgbs")
+  logging::loginfo("Running ASCAT analysis for %s", paste0(tumour$id), logger="CAMDAC")
 
   # Setup output object and results directory
   out_obj <- get_fpath(tumour, config, "ascat")
@@ -273,7 +273,7 @@ cmain_run_ascat <- function(tumour, config) {
   }
 
   # Log ASCAT penalty param
-  logging::loginfo("Using ASCAT penalty: %s", ascat_penalty, logger="CAMDAC.wgbs")
+  logging::loginfo("Using ASCAT penalty: %s", ascat_penalty, logger="CAMDAC")
 
   # Run ASCAT
   ascat_results <- run_ascat.m2(tumour, tsnps,
@@ -318,13 +318,13 @@ cmain_run_battenberg <- function(tumour, config) {
   stopifnot(fs::file_exists(camdac_tsnps))
   tsnps <- fread_chrom(camdac_tsnps)
 
-  logging::loginfo("Preparing WGBS allele counts for Battenberg", logger="CAMDAC.wgbs")
+  logging::loginfo("Preparing WGBS allele counts for Battenberg", logger="CAMDAC")
   camdac_to_battenberg_allele_freqs(tsnps, tumour_prefix, normal_prefix, outdir, min_normal_depth = config$min_cov)
 
-  logging::loginfo("Preparing WGBS BAF and logR for Battenberg", logger="CAMDAC.wgbs")
+  logging::loginfo("Preparing WGBS BAF and logR for Battenberg", logger="CAMDAC")
   prepare_wgbs_files <- camdac_to_battenberg_prepare_wgbs(tumour_prefix, normal_prefix, camdac_tsnps, outdir)
 
-  logging::loginfo("Running Battenberg for %s", paste0(tumour$id), logger="CAMDAC.wgbs")
+  logging::loginfo("Running Battenberg for %s", paste0(tumour$id), logger="CAMDAC")
   # Define battenberg inputs.
   tumourname <- tumour_prefix
   normalname <- normal_prefix
@@ -359,7 +359,7 @@ cmain_run_battenberg <- function(tumour, config) {
   bb_cores = ifelse(is.null(cna_settings$cores), 6, cna_settings$cores)
   beaglemaxmem = ifelse(is.null(cna_settings$beaglemaxmem), 10, cna_settings$beaglemaxmem)
   if (bb_cores > 6){
-    logging::logwarn("Battenberg may raise out of memory errors if given too many cores.", logger="CAMDAC.wgbs")
+    logging::logwarn("Battenberg may raise out of memory errors if given too many cores.", logger="CAMDAC")
   }
   min_normal_depth <- config$min_cov
 
@@ -373,7 +373,7 @@ cmain_run_battenberg <- function(tumour, config) {
     beaglemaxmem = beaglemaxmem
   )
 
-  logging::loginfo("Saving Battenberg results.", logger="CAMDAC.wgbs")
+  logging::loginfo("Saving Battenberg results.", logger="CAMDAC")
   cna <- load_cna_data(tumour, config, "battenberg")
 
   setwd(currentwd) # Return to original directory
@@ -391,27 +391,27 @@ cmain_make_methylation_profile <- function(sample, config) {
   # Skip if methylation file exists for sample
   output_file <- get_fpath(sample, config, "meth")
   if (fs::file_exists(output_file)) {
-    logging::logdebug("Methylation profile already exists for %s %s", sample$patient_id, sample$id, logger="CAMDAC.wgbs")
+    logging::logdebug("Methylation profile already exists for %s %s", sample$patient_id, sample$id, logger="CAMDAC")
     return()
   }
 
   ac_file <- get_fpath(sample, config, "counts")
   if (!fs::file_exists(ac_file)) {
-    logging::logdebug("No counts file. Skipping methylation profile for %s %s", sample$patient_id, sample$id, logger="CAMDAC.wgbs")
+    logging::logdebug("No counts file. Skipping methylation profile for %s %s", sample$patient_id, sample$id, logger="CAMDAC")
     return()
   }
 
-  logging::loginfo("Preprocessing methylation data: %s", sample$id, logger="CAMDAC.wgbs")
+  logging::loginfo("Preprocessing methylation data: %s", sample$id, logger="CAMDAC")
   allele_counts <- data.table::fread(ac_file)
   methylation <- process_methylation(allele_counts, min_meth_loci_reads = config$min_cov)
   rm(allele_counts)
 
-  logging::loginfo("Calculating HDI: %s", sample$id, logger="CAMDAC.wgbs")
+  logging::loginfo("Calculating HDI: %s", sample$id, logger="CAMDAC")
   hdi <- calculate_counts_hdi(methylation$M, methylation$UM, n_cores = config$n_cores)
   methylation <- cbind(methylation, hdi)
   rm(hdi)
 
-  logging::loginfo("Saving methylation profile: %s %s", sample$patient_id, sample$id, logger="CAMDAC.wgbs")
+  logging::loginfo("Saving methylation profile: %s %s", sample$patient_id, sample$id, logger="CAMDAC")
   fs::dir_create(fs::path_dir(output_file))
   data.table::fwrite(methylation, file = output_file)
   return(output_file)
@@ -425,38 +425,38 @@ cmain_make_methylation_profile <- function(sample, config) {
 #' @export
 cmain_deconvolve_methylation <- function(tumour, normal, config) {
   if (!file.exists(get_fpath(tumour, config, "meth"))) {
-    logging::loginfo("No methylation file for tumor. Skipping deconvolution for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC.wgbs")
+    logging::loginfo("No methylation file for tumor. Skipping deconvolution for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC")
     return()
   }
   if (!file.exists(get_fpath(normal, config, "meth"))) {
-    logging::loginfo("No methylation file for normal infiltrates. Skipping deconvolution for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC.wgbs")
+    logging::loginfo("No methylation file for normal infiltrates. Skipping deconvolution for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC")
     return()
   }
   outfile <- get_fpath(tumour, config, "pure")
   if (file.exists(outfile) && !config$overwrite) {
-    logging::loginfo("Pure tumour methylation exists. Skipping deconvolution for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC.wgbs")
+    logging::loginfo("Pure tumour methylation exists. Skipping deconvolution for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC")
     return(outfile)
   }
 
-  logging::loginfo("Combining tumour-normal methylation: %s", tumour$patient_id, logger="CAMDAC.wgbs")
+  logging::loginfo("Combining tumour-normal methylation: %s", tumour$patient_id, logger="CAMDAC")
   # Load DNAme data and merge (one function)
   t_meth <- fread_chrom(get_fpath(tumour, config, "meth"))
   n_meth <- fread_chrom(get_fpath(normal, config, "meth"))
   meth_c <- combine_tumour_normal_methylation(t_meth, n_meth)
 
-  logging::loginfo("Annotating CNAs: %s", paste0(tumour$id, ":", normal$id), logger="CAMDAC.wgbs")
+  logging::loginfo("Annotating CNAs: %s", paste0(tumour$id, ":", normal$id), logger="CAMDAC")
   # Load copy number data from ascat.output and annotate CGs.
   cna <- fread_chrom(get_fpath(tumour, config, "cna"))
   meth_c <- annotate_cgs_with_cnas(meth_c, cna)
 
-  logging::loginfo("Deconvolving DNAme: %s", tumour$patient_id, logger="CAMDAC.wgbs")
+  logging::loginfo("Deconvolving DNAme: %s", tumour$patient_id, logger="CAMDAC")
   # Calculate m_t
   meth_c <- deconvolve_bulk_methylation(meth_c)
 
   # Filter: CN=0 , effective cov_t>= 3, is.na(mt-raw)
   meth_c <- filter_deconvolved_methylation(meth_c)
 
-  logging::loginfo("Calculating pure_tumour HDI: %s", tumour$patient_id, logger="CAMDAC.wgbs")
+  logging::loginfo("Calculating pure_tumour HDI: %s", tumour$patient_id, logger="CAMDAC")
   # Calculate m_t HDI # parallel, long-running function
   meth_c <- calculate_m_t_hdi_norm(meth_c)
 
@@ -473,22 +473,22 @@ cmain_deconvolve_methylation <- function(tumour, normal, config) {
 #' @export
 cmain_call_dmps <- function(tumour, normal, config) {
   if (!file.exists(get_fpath(tumour, config, "pure"))) {
-    logging::logingo("No purified methylation file for tumor. Skipping deconvolution for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC.wgbs")
+    logging::logingo("No purified methylation file for tumor. Skipping deconvolution for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC")
     return()
   }
 
   if (is.null(normal)) {
-    logging::loginfo("No cell of origin provided. Skipping DMP calling for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC.wgbs")
+    logging::loginfo("No cell of origin provided. Skipping DMP calling for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC")
     return()
   }
 
   output_filename <- get_fpath(tumour, config, "dmps")
   if (file.exists(output_filename) && !config$overwrite) {
-    logging::loginfo("Skipping DMP calling for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC.wgbs")
+    logging::loginfo("Skipping DMP calling for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC")
     return(output_filename)
   }
 
-  logging::loginfo("Calling differentially methylated positions.", logger="CAMDAC.wgbs")
+  logging::loginfo("Calling differentially methylated positions.", logger="CAMDAC")
   # Call DMPs between tumour and normal
   pmeth <- fread_chrom(get_fpath(tumour, config, "pure"))
   nmeth <- fread_chrom(get_fpath(normal, config, "meth"))
@@ -518,17 +518,17 @@ cmain_call_dmps <- function(tumour, normal, config) {
 cmain_call_dmrs <- function(tumour, config) {
   dmp_outfile <- get_fpath(tumour, config, "dmps")
   if (!fs::file_exists(dmp_outfile)) {
-    logging::loginfo("No DMPs file. Skipping DMR calling for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC.wgbs")
+    logging::loginfo("No DMPs file. Skipping DMR calling for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC")
     return()
   }
 
   output_filename <- get_fpath(tumour, config, "dmrs")
   if (file.exists(output_filename) && !config$overwrite) {
-    logging::loginfo("Skipping DMR calling for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC.wgbs")
+    logging::loginfo("Skipping DMR calling for %s", paste0(tumour$patient_id, ":", tumour$id), logger="CAMDAC")
     return(output_filename)
   }
 
-  logging::loginfo("Calling differentially methylated regions.", logger="CAMDAC.wgbs")
+  logging::loginfo("Calling differentially methylated regions.", logger="CAMDAC")
   tmeth_outfile <- get_fpath(tumour, config, "dmps")
   tmeth_dmps <- fst::read_fst(tmeth_outfile, as.data.table = T)
   regions_file <- CAMDAC::get_reference_files(config, "annotations", "*all_regions_annotations*")
