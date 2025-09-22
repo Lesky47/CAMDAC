@@ -106,7 +106,7 @@
 <p>A CAMDAC container is available on <a href="https://hub.docker.com/r/nmensah5/camdac" class="external-link">dockerhub</a> for use with Docker, Singularity or Apptainer:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="ex">docker</span> pull nmensah5/camdac:latest</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="bu">echo</span> <span class="st">"library(CAMDAC)"</span> <span class="op">&gt;</span> commands.R</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a><span class="ex">docker</span> run -v <span class="va">$(</span><span class="bu">pwd</span><span class="va">)</span>:/app nmensah5/camdac:latest Rscript /app/commands.R</span></code></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a><span class="ex">docker</span> run -v <span class="va">$(</span><span class="bu">pwd</span><span class="va">)</span>:/app nmensah5/camdac:latest Rscript commands.R</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="installation--github">Installation : Github<a class="anchor" aria-label="anchor" href="#installation--github"></a>
@@ -130,17 +130,20 @@ We provide downsampled BAM files for testing the pipeline. For representative re
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">CAMDAC</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">tumor_bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"testdata"</span>, <span class="st">"tumor.bam"</span>, package <span class="op">=</span> <span class="st">"CAMDAC"</span><span class="op">)</span></span>
-<span><span class="va">normal_bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"testdata"</span>, <span class="st">"normal.bam"</span>, package <span class="op">=</span> <span class="st">"CAMDAC"</span><span class="op">)</span></span>
+<span><span class="va">tumor_bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"testdata"</span>, <span class="st">"tumour_beds_min.sorted.bam"</span>, package <span class="op">=</span> <span class="st">"CAMDAC"</span><span class="op">)</span></span>
+<span><span class="va">normal_bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"testdata"</span>, <span class="st">"normal_beds_min.sorted.bam"</span>, package <span class="op">=</span> <span class="st">"CAMDAC"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Select samples for basic tumor-normal analysis</span></span>
-<span><span class="va">tumor</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CamSample.html">CamSample</a></span><span class="op">(</span>id <span class="op">=</span> <span class="st">"T"</span>, sex <span class="op">=</span> <span class="st">"XY"</span>, bam <span class="op">=</span> <span class="va">tumor_bam</span><span class="op">)</span></span>
-<span><span class="va">normal</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CamSample.html">CamSample</a></span><span class="op">(</span>id <span class="op">=</span> <span class="st">"N"</span>, sex <span class="op">=</span> <span class="st">"XY"</span>, bam <span class="op">=</span> <span class="va">normal_bam</span><span class="op">)</span></span>
+<span><span class="va">tumor</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CamSample.html">CamSample</a></span><span class="op">(</span>id <span class="op">=</span> <span class="st">"T"</span>, sex <span class="op">=</span> <span class="st">"XY"</span>, bam <span class="op">=</span> <span class="va">tumor_bam</span>, patient_id<span class="op">=</span><span class="st">"readme"</span><span class="op">)</span></span>
+<span><span class="va">normal</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CamSample.html">CamSample</a></span><span class="op">(</span>id <span class="op">=</span> <span class="st">"N"</span>, sex <span class="op">=</span> <span class="st">"XY"</span>, bam <span class="op">=</span> <span class="va">normal_bam</span>, patient_id<span class="op">=</span><span class="st">"readme"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Configure pipeline</span></span>
 <span><span class="va">config</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CamConfig.html">CamConfig</a></span><span class="op">(</span></span>
-<span>  outdir <span class="op">=</span> <span class="st">"./results"</span>, bsseq <span class="op">=</span> <span class="st">"rrbs"</span>, lib <span class="op">=</span> <span class="st">"pe"</span>,</span>
-<span>  build <span class="op">=</span> <span class="st">"hg38"</span>, refs <span class="op">=</span> <span class="st">"./refs"</span>, n_cores <span class="op">=</span> <span class="fl">1</span>, cna_caller<span class="op">=</span><span class="st">'ascat'</span></span>
+<span>  outdir <span class="op">=</span> <span class="st">"./validation/results/test_readme/"</span>, bsseq <span class="op">=</span> <span class="st">"rrbs"</span>, lib <span class="op">=</span> <span class="st">"pe"</span>,</span>
+<span>  build <span class="op">=</span> <span class="st">"hg38"</span>, refs <span class="op">=</span> <span class="st">"./refs"</span>, n_cores <span class="op">=</span> <span class="fl">1</span>, cna_caller<span class="op">=</span><span class="st">'ascat'</span>,</span>
+<span>  min_cov<span class="op">=</span><span class="fl">1</span>, <span class="co"># Minimum tumour coverage at 1 for testing.</span></span>
+<span>  min_normal_cov<span class="op">=</span><span class="fl">1</span>, <span class="co"># Minimum normal coverage at 1 for testing. </span></span>
+<span>  min_mapq<span class="op">=</span><span class="fl">1</span> <span class="co"># Minimum MAPQ at 1 for testing.</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Run CAMDAC</span></span>
