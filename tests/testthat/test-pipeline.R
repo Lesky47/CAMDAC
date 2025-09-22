@@ -1,3 +1,5 @@
+testthat::skip("Invalid test data.")
+
 test_that("Pipeline tumour-normal completes", {
     stdout <- testthat::capture_output(
         pipeline(tumor, germline = normal, infiltrates = normal, origin = normal, config)

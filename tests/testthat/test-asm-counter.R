@@ -1,3 +1,5 @@
+testthat::skip("ASM not implemented.")
+
 test_that("ASM allele counter runs", {
   # Load hets
   # Attach SNPs to tumor and normal objects

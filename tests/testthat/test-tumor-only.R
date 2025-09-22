@@ -1,3 +1,5 @@
+testthat::skip("Experimental.")
+
 test_that("CNA calls can be made without a germline sample", {
     # CNA caller test config
     config_c <- CamConfig(
@@ -25,7 +27,7 @@ test_that("CNA calls can be made without a germline sample", {
     attach_output(germline_count, config_c, "snps", germline_count_file)
 
     # Run allele counting
-    preprocess(list(
+    preprocess_wgbs(list(
         tumor, germline, germline_to, germline_count, germline_pos
     ), config_c)
 

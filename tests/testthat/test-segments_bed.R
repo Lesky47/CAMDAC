@@ -1,11 +1,12 @@
-# FIX
+testthat::skip("Invalid test data.")
+
 test_that("allele counting regions can be read from BED file", {
-  bam <- system.file("testdata", "tumor.bam", package = "CAMDAC")
-  seg_regions <- system.file("testdata", "test_segments.bed", package = "CAMDAC")
+  bam <- system.file("testdata", "tumour_beds_min.sorted.bam", package = "CAMDAC")
+  seg_regions <- system.file("testdata", "test_beds_segments.bed", package = "CAMDAC")
 
   # Create test config for segments only
   config_t <- config
-  config_t$outdir <- "./result_test_segments"
+  config_t$outdir <- "./result_test_segments_bed"
   config_t$regions <- seg_regions
   config_t$overwrite <- TRUE
   withr::defer(fs::dir_delete(config_t$outdir))

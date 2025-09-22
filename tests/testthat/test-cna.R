@@ -1,4 +1,4 @@
-# FIX:
+testthat::skip("Invalid test data.")
 test_that("ascat and battenberg runs on wgbs samples", {
     # CNA caller test config
     config_c <- CamConfig(

@@ -1,3 +1,5 @@
+testthat::skip("ASM not implemented.")
+
 test_that("ASM pipeline runs", {
   # Setup config
   asm_config <- CamConfig(

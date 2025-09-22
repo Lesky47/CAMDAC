@@ -1,7 +1,7 @@
 # Global text fixtures that may be used by tests.
-bam <- system.file("testdata", "tumor.bam", package = "CAMDAC")
-bam2 <- system.file("testdata", "normal.bam", package = "CAMDAC")
-regions <- system.file("testdata", "test_wgbs_segments.bed", package = "CAMDAC")
+bam <- system.file("testdata", "tumour_beds_min.sorted.bam", package = "CAMDAC")
+bam2 <- system.file("testdata", "normal_beds_min.sorted.bam", package = "CAMDAC")
+regions <- system.file("testdata", "test_beds_segments.bed", package = "CAMDAC")
 
 config <- CamConfig(
     outdir = "./result_test",
@@ -10,7 +10,9 @@ config <- CamConfig(
     lib = "pe",
     regions = regions, # Speed up tests
     n_cores = 10,
-    min_cov = 1 # Required to capture sufficient SNPs from test
+    min_cov = 1, # Required to capture sufficient SNPs from test
+    min_normal_cov = 1,
+    min_mapq = 1
 )
 
 tumor <- CamSample(id = "T", sex = "XY", bam = bam)
