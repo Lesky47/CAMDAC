@@ -55,6 +55,7 @@ pipeline_wgbs <- function(tumor, germline = NULL, infiltrates = NULL, origin = N
 #' @param config. CamConfig object.
 #' @export
 #' @keywords internal
+
 preprocess_wgbs <- function(sample_list, config) {
   for (s in sample_list) {
     # Go to next part of loop if its null
@@ -62,15 +63,30 @@ preprocess_wgbs <- function(sample_list, config) {
       next
     }
 
-    # Count SNP and CpG alleles if a BAM file is provided
-    cmain_count_alleles(s, config)
+    logging::loginfo("Spawning isolated process for sample: %s", s$id, logger="CAMDAC")
+    # callr::r() creates a fresh background R session for this specific block of code
+    callr::r(
+      func = function(sample, config) {
+        library(CAMDAC)
 
-    # Prepare SNP data for CNA calling if allele counts are present
-    cmain_make_snps(s, config)
-
-    # Format methylation rates for deconvolution
-    cmain_make_methylation_profile(s, config)
-  }
+        # 1. Setup the cluster inside the isolated process
+        cl <- parallel::makeCluster(config$n_cores, type = "FORK")
+        doParallel::registerDoParallel(cl)
+        
+        # 2. Run pipeline functions
+        CAMDAC:::cmain_count_alleles(sample, config)
+        CAMDAC:::cmain_make_snps(sample, config)
+        CAMDAC:::cmain_make_methylation_profile(sample, config)
+        
+        # 3. Safely stop the cluster
+        parallel::stopCluster(cl)
+      }, 
+      args = list(sample = s, config = config),
+      show = TRUE
+    )
+  
+  logging::loginfo("Finished sample %s. OS has reclaimed all memory.", s$id, logger="CAMDAC")
+}
 }
 
 
