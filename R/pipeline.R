@@ -30,10 +30,14 @@ pipeline_wgbs <- function(tumor, germline = NULL, infiltrates = NULL, origin = N
   logging::loginfo("Pipeline start for %s", tumor$patient_id, logger="CAMDAC")
 
   # Preprocess CpG, SNP and methylation data for all samples
-  preprocess_wgbs(
-    list(tumor, germline, infiltrates, origin),
-    config
+  sample_list <- list(
+    tumor = tumor,
+    germline = germline,
+    infiltrates = if (identical(infiltrates, germline)) NULL else infiltrates,
+    origin = if (identical(origin, germline)) NULL else origin
   )
+  
+  preprocess_wgbs(sample_list, config)
 
   # Combine tumor-germline SNPs and call CNAs
   cmain_bind_snps(tumor, germline, config)
@@ -158,7 +162,7 @@ pipeline_rrbs <- function(tumor, germline, infiltrates, origin, config){
     )
 
   } else {
-    logging::loginfo("Preprocess RRBS tumour: %s.", ac_file, logger="CAMDAC")
+    logging::loginfo("RRBS tumour allele count file already exists: %s.", ac_file, logger="CAMDAC")
   }
 
   # Create SNP files and run ASCAT (tumor)
@@ -238,9 +242,8 @@ preprocess_rrbs_normal <- function(patient_id, sample_id, bam_file, min_tumor,
       }
 
       # Merge allele counts
-      is_normal <- ifelse(sample_id == normal_id, TRUE, FALSE)
       format_output(
-          patient_id, sample_id, sex, is_normal, path, pipeline_files, build
+          patient_id, sample_id, sex, is_normal = TRUE, path, pipeline_files, build
       )
       
       loginfo("Allele counting finished.")
