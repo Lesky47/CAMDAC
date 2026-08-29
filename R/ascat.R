@@ -650,15 +650,14 @@ bind_snps_protocol <- function(tsnps, normal, config) {
   return(tsnps)
 }
 
-select_heterozygous_snps <- function(tsnps) {
+select_heterozygous_snps <- function(tsnps, baf_min = 0.15, baf_max = 0.85) {
   # Used to select het SNPs from T-N prior to Battenberg.
   # However, this breaks ASCAT, so should be used with caution.
   # Note that ASCAT.m will select at 0.1 <> 0.9 as germline hom stretches required
   # This must therefore be higher. Does not influence battenberg.m
-  
-  # Temporarily changed to 0.2 and 0.8 for high coverage WGBS data.
-  # TODO: fix this later !!!
-  tsnps <- tsnps[BAF_n >= 0.2 & BAF_n <= 0.8]
+  # Defaults match the RRBS thresholds used in previous CAMDAC versions.
+  # Callers pass the configured window, see `het_baf` in `CamConfig()`.
+  tsnps <- tsnps[BAF_n >= baf_min & BAF_n <= baf_max]
   return(tsnps)
 }
 

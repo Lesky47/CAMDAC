@@ -166,7 +166,8 @@ cmain_bind_snps <- function(tumour, normal, config) {
   # Not necessary if normal is NULL as this is done in `bind_snps_protocol`
   # Future refactor: bind_snps_protocol should not filter in tumor-only mode
   if (!is.null(normal)) {
-    tsnps <- select_heterozygous_snps(tsnps)
+    het_baf <- get_het_baf(config)
+    tsnps <- select_heterozygous_snps(tsnps, baf_min = het_baf[1], baf_max = het_baf[2])
   }
 
   # Set autosome status for calculating LogR
